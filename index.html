@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="BacMaster">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#4A90E2">
+    <meta name="description" content="Révise ton Bac avec des flashcards, QCM et cours interactifs.">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Apple Touch Icons (placer les fichiers dans /icons/) -->
+    <link rel="apple-touch-icon" sizes="192x192" href="icons/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="icons/icon-512.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+
+    <title>BacMaster — Première</title>
+    <script>
+    (function(){
+        try {
+            if (localStorage.getItem('bm_theme') === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        } catch(e){}
+    })();
+    </script>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+    <!-- MathJax for LaTeX rendering -->
+    <script>
+    window.MathJax = {
+        tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']], processEscapes: true },
+        options: { skipHtmlTags: ['script','noscript','style','textarea'] },
+        startup: { typeset: false }
+    };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+</head>
+<body>
+<div id="overlay" class="overlay" onclick="closeSidebar()"></div>
+<aside id="sidebar" class="sidebar">
+    <div class="sb-logo">
+        <div class="sb-pill">BM</div>
+        <div class="sb-name">BacMaster</div>
+        <button class="sb-close" onclick="closeSidebar()">✕</button>
+    </div>
+    <div id="course-mobile-tools" class="course-mobile-tools" aria-label="Navigation du cours">
+        <div class="course-mobile-learning" id="course-mobile-learning">
+            <div><strong>📖 Navigation du cours</strong><span id="course-mobile-subtitle">Sections du chapitre</span></div>
+            <b id="mobile-course-progress">0 %</b>
+        </div>
+        <div id="course-mobile-toc"></div>
+    </div>
+    <nav class="sb-nav">
+        <button class="sb-link" onclick="goHome();closeSidebar()">🏠 Accueil</button>
+        <div class="sb-sep">Mes matières</div>
+        <button class="sb-link sb-fr"   onclick="goSubject('Français');closeSidebar()">📝 Français</button>
+        <button class="sb-link sb-math" onclick="goSubject('Maths');closeSidebar()">📐 Maths</button>
+        <button class="sb-link sb-hg"   onclick="goSubject('Histoire-Géo');closeSidebar()">🗺️ Histoire-Géo</button>
+        <button class="sb-link sb-ang"  onclick="goSubject('Anglais');closeSidebar()">🌍 Anglais</button>
+        <button class="sb-link sb-esp"  onclick="goSubject('Espagnol');closeSidebar()">🇪🇸 Espagnol</button>
+        <button class="sb-link sb-phy"  onclick="goSubject('Physique-Chimie');closeSidebar()">⚗️ Physique-Chimie</button>
+        <button class="sb-link sb-idd"  onclick="goSubject('Ingénierie & Dév. Durable');closeSidebar()">🛠️ Ingé. &amp; Dév. Durable</button>
+        <button class="sb-link sb-it"   onclick="goSubject('Innovation Techno.');closeSidebar()">💡 Innovation Techno.</button>
+        <div class="sb-sep">Culture perso</div>
+        <button class="sb-link sb-info"   onclick="goSubject('Informatique');closeSidebar()">💻 Informatique</button>
+        <button class="sb-link sb-cyber"  onclick="goSubject('Cybersécurité');closeSidebar()">🔒 Cybersécurité</button>
+        <button class="sb-link sb-bourse" onclick="goSubject('Bourse & Investissement');closeSidebar()">📊 Bourse &amp; Investissement</button>
+        <button class="sb-link sb-entr"   onclick="goSubject('Entrepreneuriat & Contenu');closeSidebar()">🚀 Entrepreneuriat &amp; Contenu</button>
+        <button class="sb-link sb-sci"    onclick="goSubject('Science de l\'Apprentissage');closeSidebar()">🧠 Science de l'Apprentissage</button>
+        <button class="sb-link sb-jur"    onclick="goSubject('Bases Juridiques & Admin');closeSidebar()">⚖️ Bases Juridiques &amp; Admin</button>
+    </nav>
+    <div class="sb-footer">Première STI2D · 2025–2026</div>
+</aside>
+<div class="shell">
+    <header class="topbar">
+        <button class="burger" onclick="toggleSidebar()">
+            <span></span><span></span><span></span>
+        </button>
+        <div class="tb-brand" onclick="goHome()">BacMaster</div>
+        <button class="search-btn" onclick="openSearch()" title="Rechercher">🔍</button>
+        <div id="tb-course-actions" class="tb-course-actions" aria-label="Actions du cours"></div>
+        <nav id="tb-contextnav" class="tb-contextnav" aria-label="Navigation du cours"></nav>
+        <div class="tb-actions">
+            <button class="music-btn" id="music-toggle-btn" onclick="toggleMusicPlayer()" title="Musique d'ambiance">🎵</button>
+            <button class="music-btn" id="theme-toggle-btn" onclick="toggleDarkMode()" title="Mode sombre">🌙</button>
+        </div>
+    </header>
+    <main id="main"></main>
+</div>
+<script src="data-init.js"></script>
+<script src="francais.js"></script>
+<script src="maths.js"></script>
+<script src="histoire-geo.js"></script>
+<script src="anglais.js"></script>
+<script src="espagnol.js"></script>
+<script src="physique-chimie.js"></script>
+<script src="ingenierie-dd.js"></script>
+<script src="innovation-techno.js"></script>
+<script src="informatique.js"></script>
+<script src="cybersecurite.js"></script>
+<script src="investissement.js"></script>
+<script src="entrepreneuriat.js"></script>
+<script src="apprentissage.js"></script>
+<script src="juridique.js"></script>
+<script src="script.js"></script>
+<!-- ── MUSIC PLAYER (persistant) ── -->
+<div id="music-panel" class="music-panel" style="display:none">
+    <div class="mp-header">
+        <span class="mp-title">🎵 Ambiance</span>
+        <button class="mp-close" onclick="toggleMusicPlayer()">✕</button>
+    </div>
+    <div class="mp-tracks">
+        <button class="mp-track active" onclick="playTrack(0)">☕ Lofi Chill</button>
+        <button class="mp-track" onclick="playTrack(1)">🌧️ Rain & Piano</button>
+        <button class="mp-track" onclick="playTrack(2)">🎹 Jazz Study</button>
+        <button class="mp-track" onclick="playTrack(3)">🌊 Nature Focus</button>
+    </div>
+    <div class="mp-custom">
+        <input type="text" id="yt-custom-url" class="mp-custom-input"
+            placeholder="🔗 Colle un lien YouTube (vidéo ou playlist)">
+        <button class="mp-custom-btn" onclick="playCustomYoutube()">▶</button>
+    </div>
+    <div class="mp-iframe-wrap">
+        <iframe id="music-iframe"
+            src="https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=0&loop=1&playlist=jfKfPfyJRdk&controls=0&modestbranding=1"
+            allow="autoplay; encrypted-media"
+            allowfullscreen
+            style="width:100%;height:80px;border:none;border-radius:8px;"></iframe>
+    </div>
+    <div class="mp-vol-row">
+        <span style="font-size:.8rem;color:var(--muted)">🔊</span>
+        <input type="range" id="mp-vol" min="0" max="100" value="60" class="mp-vol-slider"
+            oninput="setMusicVol(this.value)">
+    </div>
+</div>
+    <!-- Service Worker Registration -->
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => {
+                    console.log('[SW] Enregistré :', reg.scope);
+                    // Notifier si une mise à jour est disponible
+                    reg.addEventListener('updatefound', () => {
+                        const newSW = reg.installing;
+                        newSW.addEventListener('statechange', () => {
+                            if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+                                // Une nouvelle version est disponible
+                                if (typeof showToast === 'function') {
+                                    showToast('Mise à jour disponible — rechargez la page !', 'info');
+                                }
+                            }
+                        });
+                    });
+                })
+                .catch(err => console.warn('[SW] Échec enregistrement :', err));
+        });
+    }
+    </script>
+</body>
+</html>
