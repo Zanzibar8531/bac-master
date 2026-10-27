@@ -97,7 +97,12 @@ Object.entries(PREBUILT).forEach(([subj, chapters]) => {
 });
 save();
 
-function save() { localStorage.setItem('bacmaster_db', JSON.stringify(db)); }
+function save() {
+    localStorage.setItem('bacmaster_db', JSON.stringify(db));
+    // Explicit hook: Supabase sync no longer relies on replacing a global function.
+    // It is installed by supabase-app.js after the main application has loaded.
+    try { if (window.BacMasterSync && typeof window.BacMasterSync.onLocalSave === 'function') window.BacMasterSync.onLocalSave(); } catch (e) { console.warn('[BacMaster] Synchronisation différée :', e); }
+}
 
 // ── ÉTAT GLOBAL ───────────────────────────────────────────────
 let curSubject  = '';
@@ -669,6 +674,28 @@ function render(html) {
     window.scrollTo(0,0);
 }
 
+// ── RAFRAÎCHISSEMENT APRÈS SYNCHRO ────────────────────────────
+// Appelé par supabase-app.js quand un cours ou la progression change sur un autre appareil.
+// Ne touche jamais à l'éditeur, à un champ en cours de saisie, ni à une session de révision.
+function refreshCurrentView() {
+    if (typeof hasUnsavedEdits !== 'undefined' && hasUnsavedEdits) return false;
+    if ($('editor')) return false;
+    const a = document.activeElement;
+    if (a && (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) || a.isContentEditable)) return false;
+    const y = window.scrollY;
+    const restore = () => setTimeout(() => window.scrollTo(0, y), 80);
+    if ($('ws-box') && curSubject && curChapter) {
+        if (!db[curSubject] || !db[curSubject][curChapter]) { goModeChapters('cours'); return true; }
+        if (curTab === 'cours' || curTab === 'voc') { renderTabContent(); restore(); return true; }
+        return false;
+    }
+    if (document.querySelector('.chapters-grid') && curSubject && !curChapter && curListMode && db[curSubject]) {
+        goModeChapters(curListMode); restore(); return true;
+    }
+    return false;
+}
+window.BacMasterRefreshView = refreshCurrentView;
+
 // ── RÉVISION DU JOUR (multi-matières) ────────────────────────────
 function startDailyReview() {
     dailyReviewMode = true;
@@ -882,7 +909,9 @@ function mostRecentlyReadChapter(subj) {
     return best;
 }
 
+let curListMode = '';
 function goModeChapters(mode) {
+    curListMode = mode;
     curTrackedPage = null;
     curChapter = '';
     const cfg = CFG.find(c => c.name === curSubject);
@@ -2878,7 +2907,7 @@ async function checkForUpdate() {
     const stamp = Date.now();
     // Les 3 premiers sont indispensables ; les autres sont re-téléchargés au mieux
     const files = [
-        './index.html', './style.css', './script.js', './manifest.json', './sw.js', './data-init.js',
+        './index.html', './style.css', './script.js', './navigation.js', './manifest.json', './sw.js', './data-init.js',
         './francais.js', './maths.js', './histoire-geo.js', './anglais.js', './espagnol.js',
         './physique-chimie.js', './ingenierie-dd.js', './innovation-techno.js', './informatique.js',
         './cybersecurite.js', './investissement.js', './entrepreneuriat.js', './apprentissage.js', './juridique.js',
@@ -2898,7 +2927,7 @@ async function checkForUpdate() {
         await clearCaches();
         // 3) On re-télécharge chaque fichier en forçant le réseau (ignore aussi le cache HTTP)
         const res = await Promise.allSettled(files.map(f => fetch(f, {cache:'reload'})));
-        const critical = [0, 1, 2];
+        const critical = [0, 1, 2, 3, 4];
         if(critical.some(i => res[i].status !== 'fulfilled' || !res[i].value.ok)) throw new Error('fichiers principaux introuvables');
         // 4) Nettoyage final + désinscription : le service worker se réinstalle proprement au rechargement
         await clearCaches();

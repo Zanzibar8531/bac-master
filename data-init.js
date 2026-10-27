@@ -6,3 +6,15 @@
    ============================================================ */
 
 const PREBUILT = {};
+
+// Corrections de cartes DÉJÀ présentes chez l'élève (sa progression de révision est conservée).
+// Chaque entrée : { s: matière, ch: chapitre, oldQ: ancienne question (sans antislash),
+//                   q: nouvelle question (facultatif), oldA: ancienne réponse (facultatif),
+//                   a: nouvelle réponse (facultatif) }
+// Si oldA est donné, la carte n'est modifiée que si sa réponse est encore celle d'origine
+// (une carte modifiée par l'élève lui-même n'est jamais écrasée).
+const PREBUILT_FIXES = [];
+
+// Renommages de chapitres : { s: matière, old: ancien nom, new: nouveau nom }.
+// Les données de l'élève (progression, cartes perso) sont déplacées sous le nouveau nom.
+const PREBUILT_RENAMES = [];

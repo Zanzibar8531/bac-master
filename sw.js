@@ -4,8 +4,8 @@
                Network First pour les données dynamiques.
    ============================================================ */
 
-const CACHE_NAME   = 'bacmaster-pwa-v20-francais';
-const CACHE_STATIC = 'bacmaster-static-pwa-v20-francais';
+const CACHE_NAME   = 'bacmaster-pwa-v33-solo';
+const CACHE_STATIC = 'bacmaster-static-pwa-v33-solo';
 
 // Fichiers à mettre en cache immédiatement à l'installation
 const STATIC_ASSETS = [
@@ -111,7 +111,7 @@ self.addEventListener('fetch', event => {
 
 // ── HELPERS : Détection du type de requête ───────────────────
 function isStaticAsset(url) {
-  const localFiles = ['/index.html', '/style.css', '/script.js', '/manifest.json', '/'];
+  const localFiles = ['/index.html', '/style.css', '/script.js', '/navigation.js', '/manifest.json', '/'];
   return url.origin === self.location.origin &&
     (localFiles.some(f => url.pathname.endsWith(f)) ||
      url.pathname.startsWith('/icons/') ||
